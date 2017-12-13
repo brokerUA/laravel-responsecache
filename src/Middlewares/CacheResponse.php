@@ -25,7 +25,7 @@ class CacheResponse
             if ($this->responseCache->hasBeenCached($request)) {
                 event(new ResponseCacheHit($request));
 
-                return $this->responseCache->getCachedResponseFor($request);
+                return $this->csrf_replace($this->responseCache->getCachedResponseFor($request));
             }
         }
 
@@ -33,6 +33,7 @@ class CacheResponse
 
         if ($this->responseCache->enabled($request)) {
             if ($this->responseCache->shouldCache($request, $response)) {
+                $response = $this->csrf_replace($response);
                 $this->responseCache->cacheResponse($request, $response, $lifetimeInMinutes);
             }
         }
@@ -41,4 +42,20 @@ class CacheResponse
 
         return $response;
     }
+    
+    /**
+     * @param Response $response
+     * @return Response
+     */
+    protected function csrf_replace(Response $response): Response
+    {
+
+        $pattern = '/<input type="hidden" name="_token" value="\w+">/';
+        $replacement = '<input type="hidden" name="_token" value="' . csrf_token() . '">';
+
+        $content = preg_replace($pattern, $replacement, $response->getContent());
+
+        return $response->setContent($content);
+    }
+    
 }
