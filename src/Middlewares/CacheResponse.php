@@ -33,7 +33,6 @@ class CacheResponse
 
         if ($this->responseCache->enabled($request)) {
             if ($this->responseCache->shouldCache($request, $response)) {
-                $response = $this->csrf_replace($response);
                 $this->responseCache->cacheResponse($request, $response, $lifetimeInMinutes);
             }
         }
