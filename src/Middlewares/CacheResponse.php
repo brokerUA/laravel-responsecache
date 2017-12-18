@@ -19,13 +19,15 @@ class CacheResponse
         $this->responseCache = $responseCache;
     }
 
-    public function handle(Request $request, Closure $next, $lifetimeInMinutes = null): Response
+    public function handle(Request $request, Closure $next, $csrfReplace = null, $lifetimeInMinutes = null): Response
     {
         if ($this->responseCache->enabled($request)) {
             if ($this->responseCache->hasBeenCached($request)) {
                 event(new ResponseCacheHit($request));
 
-                return $this->csrf_replace($this->responseCache->getCachedResponseFor($request));
+                $response = $this->responseCache->getCachedResponseFor($request);
+
+                return ($csrfReplace) ? $this->csrf_replace($response) : $response;
             }
         }
 
